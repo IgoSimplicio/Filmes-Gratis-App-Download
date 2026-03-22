@@ -1,2 +1,2 @@
-# Filmes-Gr-tis-App
+# Filmes-Gratis-App
 Aplicativo de Filmes e Series Grátis Online
