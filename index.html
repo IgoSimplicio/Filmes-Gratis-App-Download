@@ -1,1424 +1,592 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>CineStream - Assistir Filmes Online</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-        }
-
-        body {
-            background: linear-gradient(135deg, #ff0000, #8b0000, #660000, #ff4444);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
-            min-height: 100vh;
-            color: white;
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .background-icons {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            pointer-events: none;
-            overflow: hidden;
-        }
-
-        .film-icon {
-            position: absolute;
-            font-size: 2.5rem;
-            color: rgba(255, 255, 255, 0.15);
-            animation: float 8s ease-in-out infinite;
-            text-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
-        }
-
-        @keyframes float {
-            0% {
-                transform: translateY(100vh) rotate(0deg) scale(1);
-                opacity: 0;
-            }
-            10% {
-                opacity: 0.8;
-                transform: translateY(80vh) rotate(36deg) scale(1.2);
-            }
-            30% {
-                opacity: 0.6;
-                transform: translateY(60vh) rotate(108deg) scale(0.9);
-            }
-            50% {
-                opacity: 0.8;
-                transform: translateY(40vh) rotate(180deg) scale(1.1);
-            }
-            70% {
-                opacity: 0.6;
-                transform: translateY(20vh) rotate(252deg) scale(0.8);
-            }
-            90% {
-                opacity: 0.4;
-                transform: translateY(5vh) rotate(324deg) scale(1.2);
-            }
-            100% {
-                transform: translateY(-20px) rotate(360deg) scale(1);
-                opacity: 0;
-            }
-        }
-
-        .film-icon:nth-child(1) { left: 2%; animation-duration: 12s; animation-delay: 0s; font-size: 3rem; }
-        .film-icon:nth-child(2) { left: 8%; animation-duration: 15s; animation-delay: 2s; font-size: 2.2rem; }
-        .film-icon:nth-child(3) { left: 15%; animation-duration: 10s; animation-delay: 4s; font-size: 2.8rem; }
-        .film-icon:nth-child(4) { left: 22%; animation-duration: 18s; animation-delay: 1s; font-size: 2rem; }
-        .film-icon:nth-child(5) { left: 30%; animation-duration: 14s; animation-delay: 3s; font-size: 3.2rem; }
-        .film-icon:nth-child(6) { left: 38%; animation-duration: 16s; animation-delay: 5s; font-size: 2.5rem; }
-        .film-icon:nth-child(7) { left: 45%; animation-duration: 13s; animation-delay: 2.5s; font-size: 2.8rem; }
-        .film-icon:nth-child(8) { left: 52%; animation-duration: 17s; animation-delay: 4.5s; font-size: 2.2rem; }
-        .film-icon:nth-child(9) { left: 60%; animation-duration: 11s; animation-delay: 1.5s; font-size: 3rem; }
-        .film-icon:nth-child(10) { left: 68%; animation-duration: 19s; animation-delay: 3.5s; font-size: 2.4rem; }
-        .film-icon:nth-child(11) { left: 75%; animation-duration: 14s; animation-delay: 2.2s; font-size: 3.1rem; }
-        .film-icon:nth-child(12) { left: 82%; animation-duration: 16s; animation-delay: 4.2s; font-size: 2.6rem; }
-        .film-icon:nth-child(13) { left: 90%; animation-duration: 12s; animation-delay: 1.2s; font-size: 2.9rem; }
-        .film-icon:nth-child(14) { left: 95%; animation-duration: 18s; animation-delay: 3.2s; font-size: 2.3rem; }
-        .film-icon:nth-child(15) { left: 98%; animation-duration: 15s; animation-delay: 5.2s; font-size: 3rem; }
-
-        .header {
-            background: linear-gradient(135deg, #000033, #000066, #000099, #0000cc);
-            background-size: 300% 300%;
-            animation: headerGradient 10s ease infinite;
-            backdrop-filter: blur(10px);
-            padding: 1rem;
-            position: fixed;
-            width: 100%;
-            top: 0;
-            z-index: 1000;
-            animation: slideDown 0.5s ease, headerGradient 10s ease infinite;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
-            border-bottom: 2px solid #0066ff;
-        }
-
-        @keyframes headerGradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        @keyframes slideDown {
-            from { transform: translateY(-100%); }
-            to { transform: translateY(0); }
-        }
-
-        .header-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.8rem;
-        }
-
-        .logo {
-            font-size: clamp(1.8rem, 6vw, 3rem);
-            font-weight: bold;
-            background: linear-gradient(45deg, #fff, #99ccff, #66a3ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 30px rgba(0, 102, 255, 0.5);
-            letter-spacing: 2px;
-            line-height: 1.2;
-        }
-
-        .search-container {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            padding: 0 1rem;
-        }
-
-        .search-box {
-            width: 100%;
-            max-width: 600px;
-            position: relative;
-        }
-
-        .search-box input {
-            width: 100%;
-            padding: 0.9rem 1.5rem;
-            padding-right: 3rem;
-            border: none;
-            border-radius: 50px;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            color: white;
-            font-size: clamp(0.9rem, 4vw, 1.1rem);
-            border: 2px solid #0066ff;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .search-box input::placeholder {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: clamp(0.8rem, 3.5vw, 1rem);
-        }
-
-        .search-box input:focus {
-            outline: none;
-            background: rgba(255, 255, 255, 0.25);
-            border-color: #3399ff;
-            box-shadow: 0 0 30px rgba(51, 153, 255, 0.5);
-        }
-
-        .search-box i {
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: white;
-            font-size: clamp(1rem, 4vw, 1.3rem);
-            text-shadow: 0 0 15px rgba(0, 102, 255, 0.5);
-        }
-
-        .header-spacer {
-            height: 130px;
-            width: 100%;
-        }
-
-        @media (min-width: 768px) {
-            .header-spacer {
-                height: 150px;
-            }
-        }
-
-        .main {
-            max-width: 1400px;
-            margin: 0 auto 2rem;
-            padding: 0 1rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        @media (min-width: 768px) {
-            .main {
-                padding: 0 2rem;
-            }
-        }
-
-        .movie-section {
-            margin-bottom: 3rem;
-        }
-
-        .section-title {
-            font-size: clamp(1.2rem, 5vw, 1.8rem);
-            margin-bottom: 1rem;
-            padding-left: 0.5rem;
-            background: linear-gradient(45deg, #fff, #ffcccc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        .movies-scroll-container {
-            width: 100%;
-            overflow: hidden;
-            position: relative;
-            padding: 0.5rem 0;
-            cursor: grab;
-        }
-
-        .movies-scroll-container:active {
-            cursor: grabbing;
-        }
-
-        .movies-track {
-            display: flex;
-            gap: 1rem;
-            width: fit-content;
-            will-change: transform;
-        }
-
-        .movies-track.animating-left {
-            animation: scroll-left 40s linear infinite;
-        }
-
-        .movies-track.animating-right {
-            animation: scroll-right 40s linear infinite;
-        }
-
-        .movies-track.paused {
-            animation-play-state: paused;
-        }
-
-        .movies-track.stopped {
-            animation: none !important;
-        }
-
-        @keyframes scroll-left {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-
-        @keyframes scroll-right {
-            0% { transform: translateX(-50%); }
-            100% { transform: translateX(0); }
-        }
-
-        .movie-card {
-            cursor: pointer;
-            transition: all 0.3s ease;
-            flex: 0 0 auto;
-            width: 160px;
-            position: relative;
-            user-select: none;
-        }
-
-        @media (min-width: 768px) {
-            .movie-card {
-                width: 200px;
-            }
-        }
-
-        .movie-card:hover {
-            transform: scale(1.05);
-            z-index: 10;
-        }
-
-        .movie-poster {
-            width: 100%;
-            aspect-ratio: 2/3;
-            object-fit: cover;
-            border-radius: 10px;
-            box-shadow: 0 5px 20px rgba(139, 0, 0, 0.4);
-            transition: all 0.3s ease;
-            border: 2px solid rgba(255, 68, 68, 0.5);
-            pointer-events: none;
-        }
-
-        @media (min-width: 768px) {
-            .movie-poster {
-                border-radius: 15px;
-                border-width: 3px;
-            }
-        }
-
-        .movie-card:hover .movie-poster {
-            border-color: #ff4444;
-            box-shadow: 0 15px 35px rgba(255, 68, 68, 0.6);
-        }
-
-        .movie-title {
-            margin-top: 0.5rem;
-            font-size: clamp(0.8rem, 4vw, 1rem);
-            font-weight: 600;
-            text-align: center;
-            color: white;
-            text-shadow: 0 2px 8px rgba(139, 0, 0, 0.5);
-            padding: 0 0.2rem;
-            line-height: 1.3;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            pointer-events: none;
-        }
-
-        @media (min-width: 768px) {
-            .movie-title {
-                margin-top: 1rem;
-                font-size: 1.1rem;
-            }
-        }
-
-        /* Modal Responsivo - Otimizado para Mobile */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            backdrop-filter: blur(5px);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-            padding: 0;
-        }
-
-        .modal-content {
-            background: linear-gradient(135deg, #8b0000, #b22222, #ff4444);
-            background-size: 300% 300%;
-            width: 100%;
-            height: 100%;
-            max-height: 100vh;
-            border-radius: 0;
-            padding: 1rem;
-            position: relative;
-            animation: modalSlideUp 0.3s ease;
-            overflow-y: auto;
-            border: none;
-            box-shadow: none;
-        }
-
-        @media (min-width: 768px) {
-            .modal {
-                padding: 1rem;
-            }
-            
-            .modal-content {
-                width: 90%;
-                max-width: 900px;
-                max-height: 90vh;
-                border-radius: 20px;
-                padding: 2rem;
-                border: 2px solid rgba(255, 68, 68, 0.8);
-                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            }
-        }
-
-        @keyframes modalSlideUp {
-            from { transform: translateY(50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        .close-modal {
-            position: sticky;
-            top: 0.5rem;
-            float: right;
-            font-size: 1.8rem;
-            color: white;
-            cursor: pointer;
-            width: 45px;
-            height: 45px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background: rgba(255, 68, 68, 0.9);
-            z-index: 10;
-            transition: all 0.3s ease;
-            margin-bottom: 0.5rem;
-        }
-
-        .close-modal:hover {
-            transform: rotate(90deg) scale(1.1);
-            background: #ff4444;
-        }
-
-        @media (min-width: 768px) {
-            .close-modal {
-                font-size: 2rem;
-                width: 40px;
-                height: 40px;
-                top: 1rem;
-                right: 1rem;
-                position: absolute;
-                margin-bottom: 0;
-            }
-        }
-
-        .modal-movie {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            padding-bottom: 2rem;
-        }
-
-        @media (min-width: 768px) {
-            .modal-movie {
-                flex-direction: row;
-                gap: 2rem;
-                padding-bottom: 0;
-            }
-        }
-
-        .modal-poster-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
-
-        @media (min-width: 768px) {
-            .modal-poster-container {
-                width: auto;
-                flex-shrink: 0;
-            }
-        }
-
-        .modal-poster {
-            width: 200px;
-            height: 300px;
-            object-fit: cover;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            border: 3px solid rgba(255, 68, 68, 0.8);
-            margin-bottom: 1rem;
-        }
-
-        @media (min-width: 480px) {
-            .modal-poster {
-                width: 250px;
-                height: 375px;
-            }
-        }
-
-        @media (min-width: 768px) {
-            .modal-poster {
-                width: 250px;
-                height: 375px;
-                margin-bottom: 0;
-            }
-        }
-
-        /* Botões verdes */
-        .modal-watch-btn-mobile {
-            background: linear-gradient(135deg, #00aa00, #00cc00, #00ff00);
-            background-size: 200% 200%;
-            animation: btnGradient 3s ease infinite;
-            border: none;
-            color: white;
-            padding: 1rem 2rem;
-            font-size: 1.2rem;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: bold;
-            width: 100%;
-            max-width: 300px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-            margin-top: 1rem;
-        }
-
-        @media (min-width: 768px) {
-            .modal-watch-btn-mobile {
-                display: none;
-            }
-        }
-
-        .modal-watch-btn-desktop {
-            display: none;
-        }
-
-        @media (min-width: 768px) {
-            .modal-watch-btn-desktop {
-                display: block;
-                background: linear-gradient(135deg, #00aa00, #00cc00, #00ff00);
-                background-size: 200% 200%;
-                animation: btnGradient 3s ease infinite;
-                border: none;
-                color: white;
-                padding: 1rem 2rem;
-                font-size: 1.2rem;
-                border-radius: 50px;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                font-weight: bold;
-                width: 100%;
-                border: 2px solid rgba(255, 255, 255, 0.3);
-                text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-                margin-top: 1rem;
-            }
-        }
-
-        @keyframes btnGradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .modal-watch-btn-mobile:active,
-        .modal-watch-btn-desktop:active {
-            transform: scale(0.95);
-        }
-
-        .modal-info {
-            flex: 1;
-            min-width: 0;
-            width: 100%;
-        }
-
-        .modal-title {
-            font-size: clamp(1.5rem, 6vw, 2.5rem);
-            margin-bottom: 1rem;
-            background: linear-gradient(45deg, #fff, #ffcccc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            line-height: 1.2;
-            text-align: center;
-        }
-
-        @media (min-width: 768px) {
-            .modal-title {
-                text-align: left;
-                font-size: 2.5rem;
-                margin-bottom: 1rem;
-            }
-        }
-
-        .modal-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.8rem;
-            margin-bottom: 1.5rem;
-            justify-content: center;
-        }
-
-        @media (min-width: 768px) {
-            .modal-meta {
-                justify-content: flex-start;
-            }
-        }
-
-        .modal-meta span {
-            background: rgba(255, 68, 68, 0.8);
-            padding: 0.5rem 1rem;
-            border-radius: 50px;
-            font-size: clamp(0.9rem, 4vw, 1rem);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(5px);
-        }
-
-        .modal-resumo {
-            margin: 1rem 0;
-            line-height: 1.6;
-            font-size: clamp(0.95rem, 4vw, 1.1rem);
-            max-height: none;
-            overflow-y: visible;
-            padding: 0 0.5rem;
-            text-align: justify;
-        }
-
-        @media (min-width: 768px) {
-            .modal-resumo {
-                max-height: 300px;
-                overflow-y: auto;
-                padding-right: 1rem;
-            }
-        }
-
-        /* Player Modal - Usando webview nativo */
-        .player-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            z-index: 3000;
-        }
-
-        .player-content {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        .player-header {
-            background: linear-gradient(135deg, #000033, #000066);
-            padding: 0.8rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            border-bottom: 2px solid #0066ff;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 10;
-        }
-
-        .player-header.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-
-        .player-header.visible {
-            opacity: 1;
-            visibility: visible;
-            pointer-events: all;
-        }
-
-        @media (min-width: 768px) {
-            .player-header {
-                padding: 1rem;
-            }
-        }
-
-        .player-header h3 {
-            font-size: clamp(0.9rem, 4vw, 1.2rem);
-            color: white;
-            flex: 1;
-            min-width: 150px;
-            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-        }
-
-        .close-player {
-            color: white;
-            font-size: clamp(0.9rem, 4vw, 1.1rem);
-            cursor: pointer;
-            padding: 0.4rem 0.8rem;
-            background: #0066ff;
-            border-radius: 50px;
-            white-space: nowrap;
-            transition: all 0.3s ease;
-        }
-
-        .close-player:active {
-            background: #3399ff;
-            transform: scale(0.95);
-        }
-
-        @media (min-width: 768px) {
-            .close-player {
-                font-size: 1.2rem;
-                padding: 0.5rem 1rem;
-            }
-        }
-
-        /* Botão flutuante discreto com animação */
-        .player-control-btn {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: rgba(0, 102, 255, 0.4);
-            backdrop-filter: blur(8px);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            font-size: 1.8rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            z-index: 20;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .player-control-btn:active {
-            transform: scale(0.85);
-            background: rgba(0, 102, 255, 0.8);
-            border-color: white;
-            box-shadow: 0 0 30px rgba(0, 102, 255, 0.8);
-        }
-
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            }
-            50% {
-                transform: scale(1.1);
-                box-shadow: 0 0 30px rgba(0, 102, 255, 0.8);
-            }
-            100% {
-                transform: scale(1);
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            }
-        }
-
-        .player-control-btn.pulse {
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        .player-control-btn i {
-            font-style: normal;
-            line-height: 1;
-            transition: transform 0.3s ease;
-        }
-
-        .player-control-btn.rotate i {
-            animation: spin 0.5s ease;
-        }
-
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        /* WebView - usando um iframe com configurações para evitar bloqueio de sandbox */
-        .player-frame {
-            flex: 1;
-            width: 100%;
-            border: none;
-            min-height: 0;
-            background: #fff;
-            /* Permite navegação completa sem restrições de sandbox */
-            sandbox: null;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 3rem;
-            font-size: 1.5rem;
-            color: white;
-        }
-
-        .error-message {
-            text-align: center;
-            padding: 2rem;
-            background: rgba(255, 68, 68, 0.3);
-            border-radius: 10px;
-            margin: 2rem 0;
-        }
-
-        .no-results {
-            text-align: center;
-            padding: 2rem 1rem;
-            font-size: clamp(1rem, 5vw, 1.3rem);
-            background: rgba(139, 0, 0, 0.3);
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 68, 68, 0.5);
-            width: 100%;
-        }
-
-        .retry-btn {
-            background: #0066ff;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 50px;
-            margin-top: 1rem;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .retry-btn:active {
-            background: #3399ff;
-            transform: scale(0.95);
-        }
-
-        @media (hover: none) and (pointer: coarse) {
-            .movie-card:hover {
-                transform: none;
-            }
-            
-            .movie-card:active {
-                transform: scale(0.98);
-            }
-            
-            .watch-btn:hover {
-                transform: none;
-            }
-            
-            .watch-btn:active {
-                transform: scale(0.98);
-            }
-        }
-
-        @media (orientation: landscape) and (max-height: 500px) {
-            .header {
-                padding: 0.5rem;
-            }
-            
-            .header-spacer {
-                height: 110px;
-            }
-            
-            .main {
-                padding: 0 1rem;
-            }
-            
-            .movie-card {
-                width: 120px;
-            }
-
-            .modal-poster {
-                width: 120px;
-                height: 180px;
-            }
-
-            .modal-watch-btn-mobile {
-                padding: 0.5rem 1rem;
-                font-size: 1rem;
-            }
-
-            .player-control-btn {
-                width: 50px;
-                height: 50px;
-                font-size: 1.5rem;
-                bottom: 10px;
-                right: 10px;
-            }
-        }
-
-        .modal-resumo::-webkit-scrollbar {
-            width: 5px;
-        }
-
-        .modal-resumo::-webkit-scrollbar-track {
-            background: rgba(255, 68, 68, 0.1);
-            border-radius: 10px;
-        }
-
-        .modal-resumo::-webkit-scrollbar-thumb {
-            background: #ff4444;
-            border-radius: 10px;
-        }
-    </style>
-</head>
-<body>
-    <div class="background-icons">
-        <div class="film-icon">🎬</div>
-        <div class="film-icon">🎥</div>
-        <div class="film-icon">🍿</div>
-        <div class="film-icon">🎞️</div>
-        <div class="film-icon">📽️</div>
-        <div class="film-icon">🎦</div>
-        <div class="film-icon">🎫</div>
-        <div class="film-icon">🎪</div>
-        <div class="film-icon">🎭</div>
-        <div class="film-icon">🎟️</div>
-        <div class="film-icon">📀</div>
-        <div class="film-icon">💿</div>
-        <div class="film-icon">📺</div>
-        <div class="film-icon">📼</div>
-        <div class="film-icon">🔴</div>
-    </div>
-
-    <header class="header">
-        <div class="header-content">
-            <div class="logo">🎬 CineStream</div>
-            <div class="search-container">
-                <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="Buscar filmes por título...">
-                    <i>🔍</i>
-                </div>
-            </div>
-        </div>
+<!doctype html>
+<html lang="pt-BR" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Filmes Grátis - Download APK</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&amp;family=Space+Mono:wght@700&amp;display=swap" rel="stylesheet">
+  <style>
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(3deg); }
+    }
+
+    @keyframes slide-up {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slide-down {
+      from { opacity: 0; transform: translateY(-30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes scale-in {
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+    @keyframes orbit {
+      0% { transform: rotate(0deg) translateX(140px) rotate(0deg); }
+      100% { transform: rotate(360deg) translateX(140px) rotate(-360deg); }
+    }
+    @keyframes orbit2 {
+      0% { transform: rotate(120deg) translateX(180px) rotate(-120deg); }
+      100% { transform: rotate(480deg) translateX(180px) rotate(-480deg); }
+    }
+    @keyframes orbit3 {
+      0% { transform: rotate(240deg) translateX(110px) rotate(-240deg); }
+      100% { transform: rotate(600deg) translateX(110px) rotate(-600deg); }
+    }
+    @keyframes sparkle {
+      0%, 100% { opacity: 0; transform: scale(0); }
+      50% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes counter {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-float { animation: float 6s ease-in-out infinite; }
+    .animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+    .animate-slide-up { animation: slide-up 0.8s ease-out forwards; }
+    .animate-slide-down { animation: slide-down 0.7s ease-out forwards; }
+    .animate-scale-in { animation: scale-in 0.6s ease-out forwards; }
+    .animate-orbit { animation: orbit 20s linear infinite; }
+    .animate-orbit2 { animation: orbit2 25s linear infinite; }
+    .animate-orbit3 { animation: orbit3 15s linear infinite; }
+    .delay-100 { animation-delay: 0.1s; }
+    .delay-200 { animation-delay: 0.2s; }
+    .delay-300 { animation-delay: 0.3s; }
+    .delay-400 { animation-delay: 0.4s; }
+    .delay-500 { animation-delay: 0.5s; }
+    .delay-600 { animation-delay: 0.6s; }
+    .delay-700 { animation-delay: 0.7s; }
+    .delay-800 { animation-delay: 0.8s; }
+    .shimmer-text {
+      background: linear-gradient(90deg, currentColor 40%, #ff3860 50%, currentColor 60%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 4s linear infinite;
+    }
+    .sparkle-1 { animation: sparkle 2s ease-in-out infinite; animation-delay: 0s; }
+    .sparkle-2 { animation: sparkle 2.5s ease-in-out infinite; animation-delay: 0.5s; }
+    .sparkle-3 { animation: sparkle 1.8s ease-in-out infinite; animation-delay: 1s; }
+    .sparkle-4 { animation: sparkle 3s ease-in-out infinite; animation-delay: 1.5s; }
+    .sparkle-5 { animation: sparkle 2.2s ease-in-out infinite; animation-delay: 0.7s; }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.4), 0 15px 40px rgba(34, 197, 94, 0.2); }
+      50% { box-shadow: 0 0 30px rgba(34, 197, 94, 0.6), 0 20px 50px rgba(34, 197, 94, 0.3); }
+    }
+    .download-btn {
+      transition: all 0.3s ease;
+      background: linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%) !important;
+      animation: pulse-glow 2s ease-in-out infinite;
+      pointer-events: auto;
+      cursor: pointer;
+      border: none;
+      position: relative;
+      z-index: 10;
+    }
+    .download-btn:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 15px 40px rgba(34, 197, 94, 0.5) !important;
+    }
+    .download-btn:active {
+      transform: translateY(0) scale(0.98);
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: all 0.4s ease;
+    }
+    .glass-card:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 56, 96, 0.3);
+      transform: translateY(-5px);
+    }
+    .stat-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+      background: rgba(255, 56, 96, 0.08);
+      border-color: rgba(255, 56, 96, 0.2);
+    }
+    .bg-grid {
+      background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    .phone-mockup {
+      background: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 25px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+    .feature-icon-bg {
+      background: linear-gradient(135deg, rgba(255, 56, 96, 0.15), rgba(255, 56, 96, 0.05));
+      border: 1px solid rgba(255, 56, 96, 0.2);
+    }
+    /* Hide elements before animation */
+    .pre-animate { opacity: 0; }
+    
+    /* Toast notification style */
+    .toast-notification {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(0,0,0,0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-size: 14px;
+      z-index: 9999;
+      transition: transform 0.3s ease;
+      pointer-events: none;
+      white-space: nowrap;
+      font-family: 'Outfit', sans-serif;
+      border: 1px solid rgba(34,197,94,0.3);
+    }
+    .toast-notification.show {
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+  <style>body { box-sizing: border-box; margin: 0; padding: 0; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full">
+  <div id="app-wrapper" class="w-full h-full overflow-auto" style="background: #0a0a1a; font-family: 'Outfit', sans-serif;">
+   <!-- Toast notification -->
+   <div id="toast" class="toast-notification">📱 Download iniciado...</div>
+   
+   <!-- Sparkle particles -->
+   <div class="fixed inset-0 pointer-events-none overflow-hidden" style="z-index:1;">
+    <div class="sparkle-1 absolute w-1.5 h-1.5 rounded-full" style="top:10%;left:15%;background:#ff3860;"></div>
+    <div class="sparkle-2 absolute w-1 h-1 rounded-full" style="top:25%;left:80%;background:#ff6b8a;"></div>
+    <div class="sparkle-3 absolute w-2 h-2 rounded-full" style="top:60%;left:10%;background:#ff3860;"></div>
+    <div class="sparkle-4 absolute w-1 h-1 rounded-full" style="top:75%;left:70%;background:#ff8fa3;"></div>
+    <div class="sparkle-5 absolute w-1.5 h-1.5 rounded-full" style="top:40%;left:90%;background:#ff3860;"></div>
+    <div class="sparkle-2 absolute w-1 h-1 rounded-full" style="top:85%;left:45%;background:#ff6b8a;"></div>
+    <div class="sparkle-4 absolute w-2 h-2 rounded-full" style="top:15%;left:55%;background:#ff3860;"></div>
+   </div>
+   <!-- Background grid overlay -->
+   <div class="fixed inset-0 bg-grid pointer-events-none" style="z-index:0;"></div>
+   <!-- Gradient orbs -->
+   <div class="fixed inset-0 pointer-events-none overflow-hidden" style="z-index:0;">
+    <div class="absolute rounded-full" style="width:500px;height:500px;top:-150px;right:-100px;background:radial-gradient(circle,rgba(255,56,96,0.12) 0%,transparent 70%);"></div>
+    <div class="absolute rounded-full" style="width:400px;height:400px;bottom:-100px;left:-100px;background:radial-gradient(circle,rgba(139,92,246,0.08) 0%,transparent 70%);"></div>
+    <div class="absolute rounded-full" style="width:300px;height:300px;top:50%;left:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(255,56,96,0.05) 0%,transparent 70%);"></div>
+   </div>
+   <div class="relative" style="z-index:2;">
+    <!-- Header / Nav -->
+    <header class="animate-slide-down pre-animate pt-6 pb-4 px-6">
+     <nav class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+       <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, #ff3860, #e91e63);">
+        <i data-lucide="film" style="width:22px;height:22px;color:white;"></i>
+       </div><span id="nav-title" class="text-xl font-bold" style="color:#ffffff;">Filmes Grátis</span>
+      </div>
+      <div class="flex items-center gap-2">
+       <span class="text-xs font-medium px-3 py-1.5 rounded-full" style="background:rgba(255,56,96,0.15);color:#ff6b8a;">v1.0.0</span> <span class="text-xs font-medium px-3 py-1.5 rounded-full" style="background:rgba(74,222,128,0.12);color:#4ade80;">Android</span>
+      </div>
+     </nav>
     </header>
-
-    <div class="header-spacer"></div>
-
-    <main class="main">
-        <div id="loading" class="loading">Carregando filmes... 🎬</div>
-        <div id="error" class="error-message" style="display: none;"></div>
-        
-        <div id="movieSections" style="display: none;">
-            <section class="movie-section">
-                <h2 class="section-title">🎬 Destaques da Semana</h2>
-                <div class="movies-scroll-container" id="scrollContainerLeft">
-                    <div class="movies-track animating-left" id="trackLeft"></div>
-                </div>
-            </section>
-
-            <section class="movie-section">
-                <h2 class="section-title">🍿 Recomendados para Você</h2>
-                <div class="movies-scroll-container" id="scrollContainerRight">
-                    <div class="movies-track animating-right" id="trackRight"></div>
-                </div>
-            </section>
+    <!-- Hero Section -->
+    <main class="max-w-6xl mx-auto px-6 pt-10 pb-16">
+     <div class="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+      <!-- Left: Text Content -->
+      <div class="flex-1 text-center lg:text-left">
+       <div class="animate-slide-up pre-animate delay-100 mb-5">
+        <span class="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-full" style="background:rgba(255,56,96,0.1);color:#ff6b8a;border:1px solid rgba(255,56,96,0.15);"> <i data-lucide="sparkles" style="width:14px;height:14px;"></i> <span>Novo App Disponível</span> </span>
+       </div>
+       <h1 id="hero-title" class="animate-slide-up pre-animate delay-200 text-5xl sm:text-6xl lg:text-7xl font-black leading-tight mb-2 shimmer-text" style="color:#ffffff;">Filmes Grátis</h1>
+       <p id="hero-subtitle" class="animate-slide-up pre-animate delay-300 text-lg sm:text-xl font-light leading-relaxed mb-8 max-w-lg mx-auto lg:mx-0" style="color:rgba(255,255,255,0.55);">Assista milhares de filmes e séries direto no seu celular. Totalmente gratuito, sem cadastro.</p>
+       <!-- Download Button -->
+       <div class="animate-slide-up pre-animate delay-400 flex flex-col sm:flex-row items-center gap-4 mb-8 justify-center lg:justify-start">
+        <button onclick="downloadAPK(event)" class="download-btn inline-flex items-center gap-3 text-white font-bold text-lg px-8 py-4 rounded-2xl cursor-pointer" id="download-btn" style="border:none;"> <i data-lucide="download" style="width:22px;height:22px;"></i> <span id="btn-text">Baixar APK Grátis</span> </button> <span class="text-sm" style="color:rgba(255,255,255,0.35);">~15 MB • Android 5.0+</span>
+       </div>
+       <!-- Stats Row -->
+       <div class="animate-slide-up pre-animate delay-500 flex flex-wrap gap-3 justify-center lg:justify-start">
+        <div class="stat-card flex items-center gap-2 px-4 py-2.5 rounded-xl">
+         <i data-lucide="download-cloud" style="width:16px;height:16px;color:#ff6b8a;"></i> <span class="text-sm font-semibold" style="color:rgba(255,255,255,0.8);">10K+</span> <span class="text-xs" style="color:rgba(255,255,255,0.4);">downloads</span>
         </div>
+        <div class="stat-card flex items-center gap-2 px-4 py-2.5 rounded-xl">
+         <i data-lucide="star" style="width:16px;height:16px;color:#fbbf24;"></i> <span class="text-sm font-semibold" style="color:rgba(255,255,255,0.8);">4.8</span> <span class="text-xs" style="color:rgba(255,255,255,0.4);">avaliação</span>
+        </div>
+        <div class="stat-card flex items-center gap-2 px-4 py-2.5 rounded-xl">
+         <i data-lucide="shield-check" style="width:16px;height:16px;color:#4ade80;"></i> <span class="text-sm font-semibold" style="color:rgba(255,255,255,0.8);">Seguro</span> <span class="text-xs" style="color:rgba(255,255,255,0.4);">verificado</span>
+        </div>
+       </div>
+      </div>
+      <!-- Right: Phone Mockup -->
+      <div class="flex-shrink-0 animate-scale-in pre-animate delay-500 relative">
+       <!-- Orbital elements -->
+       <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div class="animate-orbit absolute w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(255,56,96,0.2);border:1px solid rgba(255,56,96,0.3);">
+         <span class="text-base">🎬</span>
+        </div>
+        <div class="animate-orbit2 absolute w-7 h-7 rounded-lg flex items-center justify-center" style="background:rgba(139,92,246,0.2);border:1px solid rgba(139,92,246,0.3);">
+         <span class="text-base">🍿</span>
+        </div>
+        <div class="animate-orbit3 absolute w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(251,191,36,0.2);border:1px solid rgba(251,191,36,0.3);">
+         <span class="text-base">⭐</span>
+        </div>
+       </div>
+       <div class="phone-mockup animate-float rounded-3xl p-3 relative" style="width:260px;height:480px;">
+        <!-- Phone screen content -->
+        <div class="w-full h-full rounded-2xl overflow-hidden relative" style="background:#0d1b2a;">
+         <!-- Status bar -->
+         <div class="flex items-center justify-between px-4 py-2" style="background:rgba(0,0,0,0.3);">
+          <span class="text-xs font-medium" style="color:rgba(255,255,255,0.6);">9:41</span>
+          <div class="flex items-center gap-1.5">
+           <i data-lucide="wifi" style="width:12px;height:12px;color:rgba(255,255,255,0.5);"></i> <i data-lucide="battery-full" style="width:14px;height:14px;color:rgba(255,255,255,0.5);"></i>
+          </div>
+         </div>
+         <!-- App header -->
+         <div class="px-4 pt-3 pb-2">
+          <span class="text-base font-bold" style="color:#ffffff;">🎬 Filmes Grátis</span>
+          <div class="flex gap-2 mt-2.5">
+           <span class="text-xs px-2.5 py-1 rounded-full font-medium" style="background:#ff3860;color:white;">Populares</span> <span class="text-xs px-2.5 py-1 rounded-full font-medium" style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);">Ação</span> <span class="text-xs px-2.5 py-1 rounded-full font-medium" style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);">Drama</span>
+          </div>
+         </div>
+         <!-- Mock movie cards -->
+         <div class="px-4 pt-2 grid grid-cols-2 gap-2">
+          <div class="rounded-xl overflow-hidden" style="background:linear-gradient(135deg,#1a1a3e,#2a1a4e);height:110px;">
+           <div class="w-full h-full flex flex-col items-center justify-center gap-1">
+            <span class="text-2xl">🎥</span> <span class="text-xs font-medium" style="color:rgba(255,255,255,0.7);">Ação Total</span>
+            <div class="flex items-center gap-0.5"><span class="text-yellow-400 text-xs">★★★★</span><span class="text-xs" style="color:rgba(255,255,255,0.3);">★</span>
+            </div>
+           </div>
+          </div>
+          <div class="rounded-xl overflow-hidden" style="background:linear-gradient(135deg,#1a2a3e,#1a3a4e);height:110px;">
+           <div class="w-full h-full flex flex-col items-center justify-center gap-1">
+            <span class="text-2xl">🎭</span> <span class="text-xs font-medium" style="color:rgba(255,255,255,0.7);">Drama Real</span>
+            <div class="flex items-center gap-0.5"><span class="text-yellow-400 text-xs">★★★★★</span>
+            </div>
+           </div>
+          </div>
+          <div class="rounded-xl overflow-hidden" style="background:linear-gradient(135deg,#2a1a2e,#3a1a3e);height:110px;">
+           <div class="w-full h-full flex flex-col items-center justify-center gap-1">
+            <span class="text-2xl">👻</span> <span class="text-xs font-medium" style="color:rgba(255,255,255,0.7);">Terror Noite</span>
+            <div class="flex items-center gap-0.5"><span class="text-yellow-400 text-xs">★★★★</span><span class="text-xs" style="color:rgba(255,255,255,0.3);">★</span>
+            </div>
+           </div>
+          </div>
+          <div class="rounded-xl overflow-hidden" style="background:linear-gradient(135deg,#1a2a1a,#1a3a2a);height:110px;">
+           <div class="w-full h-full flex flex-col items-center justify-center gap-1">
+            <span class="text-2xl">😂</span> <span class="text-xs font-medium" style="color:rgba(255,255,255,0.7);">Comédia+</span>
+            <div class="flex items-center gap-0.5"><span class="text-yellow-400 text-xs">★★★★</span><span class="text-xs" style="color:rgba(255,255,255,0.3);">★</span>
+            </div>
+           </div>
+          </div>
+         </div>
+         <!-- Bottom nav -->
+         <div class="absolute bottom-0 left-0 right-0 flex items-center justify-around py-2.5 px-2" style="background:rgba(0,0,0,0.5);backdrop-filter:blur(10px);">
+          <div class="flex flex-col items-center gap-0.5">
+           <i data-lucide="home" style="width:16px;height:16px;color:#ff3860;"></i> <span class="text-xs" style="color:#ff3860;font-size:9px;">Início</span>
+          </div>
+          <div class="flex flex-col items-center gap-0.5">
+           <i data-lucide="search" style="width:16px;height:16px;color:rgba(255,255,255,0.4);"></i> <span style="color:rgba(255,255,255,0.4);font-size:9px;">Buscar</span>
+          </div>
+          <div class="flex flex-col items-center gap-0.5">
+           <i data-lucide="heart" style="width:16px;height:16px;color:rgba(255,255,255,0.4);"></i> <span style="color:rgba(255,255,255,0.4);font-size:9px;">Favoritos</span>
+          </div>
+          <div class="flex flex-col items-center gap-0.5">
+           <i data-lucide="user" style="width:16px;height:16px;color:rgba(255,255,255,0.4);"></i> <span style="color:rgba(255,255,255,0.4);font-size:9px;">Perfil</span>
+          </div>
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+     <!-- Features Section -->
+     <section class="mt-20">
+      <h2 class="animate-slide-up pre-animate delay-600 text-center text-2xl sm:text-3xl font-bold mb-10" style="color:#ffffff;">Por que escolher o <span style="color:#ff3860;">Filmes Grátis</span>?</h2>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+       <div class="glass-card animate-scale-in pre-animate delay-500 rounded-2xl p-6">
+        <div class="feature-icon-bg w-12 h-12 rounded-xl flex items-center justify-center mb-4">
+         <i data-lucide="badge-dollar-sign" style="width:22px;height:22px;color:#ff6b8a;"></i>
+        </div>
+        <h3 id="feat-1-title" class="text-lg font-bold mb-2" style="color:#ffffff;">100% Gratuito</h3>
+        <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,0.45);">Sem assinaturas, sem taxas ocultas. Todos os filmes e séries totalmente de graça.</p>
+       </div>
+       <div class="glass-card animate-scale-in pre-animate delay-600 rounded-2xl p-6">
+        <div class="feature-icon-bg w-12 h-12 rounded-xl flex items-center justify-center mb-4">
+         <i data-lucide="shield-off" style="width:22px;height:22px;color:#ff6b8a;"></i>
+        </div>
+        <h3 id="feat-2-title" class="text-lg font-bold mb-2" style="color:#ffffff;">Sem Anúncios Invasivos</h3>
+        <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,0.45);">Experiência limpa e agradável. Assista sem interrupções chatas.</p>
+       </div>
+       <div class="glass-card animate-scale-in pre-animate delay-700 rounded-2xl p-6 sm:col-span-2 lg:col-span-1">
+        <div class="feature-icon-bg w-12 h-12 rounded-xl flex items-center justify-center mb-4">
+         <i data-lucide="refresh-cw" style="width:22px;height:22px;color:#ff6b8a;"></i>
+        </div>
+        <h3 id="feat-3-title" class="text-lg font-bold mb-2" style="color:#ffffff;">Catálogo Atualizado</h3>
+        <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,0.45);">Novos filmes e séries adicionados frequentemente. Sempre algo novo para assistir.</p>
+       </div>
+      </div>
+     </section>
+     <!-- How to install -->
+     <section class="mt-20 animate-slide-up pre-animate delay-800">
+      <h2 class="text-center text-2xl sm:text-3xl font-bold mb-10" style="color:#ffffff;">Como <span style="color:#ff3860;">instalar</span>?</h2>
+      <div class="flex flex-col sm:flex-row items-stretch gap-4 max-w-3xl mx-auto">
+       <div class="flex-1 glass-card rounded-2xl p-5 text-center">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-3" style="background:#ff3860;color:white;font-family:'Space Mono',monospace;font-weight:700;">
+         1
+        </div>
+        <h3 class="font-bold mb-1" style="color:#ffffff;">Baixe o APK</h3>
+        <p class="text-sm" style="color:rgba(255,255,255,0.4);">Clique no botão de download acima</p>
+       </div>
+       <div class="flex-1 glass-card rounded-2xl p-5 text-center">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-3" style="background:#ff3860;color:white;font-family:'Space Mono',monospace;font-weight:700;">
+         2
+        </div>
+        <h3 class="font-bold mb-1" style="color:#ffffff;">Permita a instalação</h3>
+        <p class="text-sm" style="color:rgba(255,255,255,0.4);">Habilite "fontes desconhecidas" nas configurações</p>
+       </div>
+       <div class="flex-1 glass-card rounded-2xl p-5 text-center">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-3" style="background:#ff3860;color:white;font-family:'Space Mono',monospace;font-weight:700;">
+         3
+        </div>
+        <h3 class="font-bold mb-1" style="color:#ffffff;">Aproveite!</h3>
+        <p class="text-sm" style="color:rgba(255,255,255,0.4);">Abra o app e comece a assistir</p>
+       </div>
+      </div>
+     </section>
+     <!-- CTA -->
+     <section class="mt-20 mb-10 text-center">
+      <div class="glass-card rounded-3xl p-10 max-w-2xl mx-auto relative overflow-hidden">
+       <div class="absolute inset-0" style="background:linear-gradient(135deg,rgba(255,56,96,0.08),transparent);"></div>
+       <div class="relative">
+        <span class="text-4xl mb-4 block">🎬</span>
+        <h2 class="text-2xl sm:text-3xl font-black mb-3" style="color:#ffffff;">Pronto para assistir?</h2>
+        <p class="mb-6" style="color:rgba(255,255,255,0.45);">Baixe agora e tenha acesso a milhares de filmes na palma da sua mão.</p>
+        <button onclick="downloadAPK(event)" class="download-btn inline-flex items-center gap-2 text-white font-bold px-7 py-3.5 rounded-xl cursor-pointer" id="download-btn-2" style="border:none;"> <i data-lucide="download" style="width:20px;height:20px;"></i> <span id="btn-text-2">Baixar APK Grátis</span> </button>
+       </div>
+      </div>
+     </section>
     </main>
-
-    <div class="modal" id="movieModal" onclick="if(event.target === this) closeModal()">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeModal()">&times;</span>
-            <div class="modal-movie" id="modalMovieContent"></div>
-        </div>
-    </div>
-
-    <div class="player-modal" id="playerModal">
-        <div class="player-content">
-            <div class="player-header visible" id="playerHeader">
-                <h3 id="playerTitle">Carregando...</h3>
-                <span class="close-player" onclick="closePlayer()">Fechar ✕</span>
-            </div>
-            <div class="player-control-btn pulse" id="playerControlBtn" onclick="togglePlayerHeader(event)">
-                <i>⚙️</i>
-            </div>
-            <iframe class="player-frame" id="playerFrame" allowfullscreen allow="autoplay; fullscreen; payment; accelerometer; camera; gyroscope; magnetometer; microphone; midi; web-share"></iframe>
-        </div>
-    </div>
-
-    <script>
-        // SUA URL DO JSON ATUALIZADA
-        const JSON_URL = 'https://raw.githubusercontent.com/IgoSimplicio/filmes.json/refs/heads/main/filmes.json';
+    <!-- Footer -->
+    <footer class="py-6 px-6 text-center" style="border-top:1px solid rgba(255,255,255,0.05);">
+     <p class="text-sm" style="color:rgba(255,255,255,0.25);">© 2025 Filmes Grátis App. Todos os direitos reservados.</p>
+    </footer>
+   </div>
+  </div>
+  <script>
+    // URL do APK para download
+    const APK_URL = 'https://github.com/IgoSimplicio/Filmes-Gr-tis-App/releases/download/v1.0.0/Filmes_Gratis.apk';
+    
+    // Função para mostrar toast notification
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      if (!toast) return;
+      
+      toast.textContent = message;
+      toast.style.background = isError ? 'rgba(220,38,38,0.9)' : 'rgba(0,0,0,0.9)';
+      toast.style.borderColor = isError ? '#ef4444' : '#22c55e';
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+    
+    // Função de download CORRIGIDA - força o download do arquivo
+    function downloadAPK(event) {
+      // Previne qualquer comportamento padrão que possa interferir
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      
+      console.log('Iniciando download do APK...');
+      
+      try {
+        // Método 1: Usar window.location.href (mais confiável para forçar download)
+        // Isso funciona melhor em navegadores móveis e desktop
+        window.location.href = APK_URL;
         
-        let movies = [];
-        let allMovies = [];
-
-        // Elementos do DOM
-        const loadingEl = document.getElementById('loading');
-        const errorEl = document.getElementById('error');
-        const movieSections = document.getElementById('movieSections');
-        const trackLeft = document.getElementById('trackLeft');
-        const trackRight = document.getElementById('trackRight');
-        const scrollContainerLeft = document.getElementById('scrollContainerLeft');
-        const scrollContainerRight = document.getElementById('scrollContainerRight');
-        const searchInput = document.getElementById('searchInput');
-        const movieModal = document.getElementById('movieModal');
-        const modalMovieContent = document.getElementById('modalMovieContent');
-        const playerModal = document.getElementById('playerModal');
-        const playerFrame = document.getElementById('playerFrame');
-        const playerTitle = document.getElementById('playerTitle');
-        const playerHeader = document.getElementById('playerHeader');
-        const playerControlBtn = document.getElementById('playerControlBtn');
-
-        // Variáveis para controle do player
-        let headerTimeout;
-        let isHeaderVisible = true;
-
-        // Função para normalizar URLs (adicionar https:// se necessário)
-        function normalizeUrl(url) {
-            if (!url) return '';
-            url = url.trim();
-            // Se não começar com http:// ou https://, adiciona https://
-            if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                return 'https://' + url;
-            }
-            return url;
-        }
-
-        // Função para carregar URL no iframe com tratamento especial
-        function loadUrlInWebView(url, title) {
-            const normalizedUrl = normalizeUrl(url);
-            playerTitle.textContent = `Carregando: ${title}`;
-            
-            // Limpar timeout anterior
-            if (headerTimeout) {
-                clearTimeout(headerTimeout);
-            }
-            
-            // Carregar URL no iframe
-            playerFrame.src = normalizedUrl;
-            
-            // Adicionar evento de load para atualizar título
-            playerFrame.onload = function() {
-                playerTitle.textContent = `Assistindo: ${title}`;
-            };
-            
-            // Adicionar evento de erro
-            playerFrame.onerror = function() {
-                playerTitle.textContent = `Erro ao carregar: ${title}`;
-            };
-            
-            // Resetar estado do cabeçalho
-            playerHeader.classList.remove('hidden');
-            playerHeader.classList.add('visible');
-            isHeaderVisible = true;
-            playerControlBtn.classList.remove('pulse');
-            
-            // Iniciar timer de 3 segundos
-            startHeaderTimer();
-        }
-
-        // Função para iniciar timer do cabeçalho
-        function startHeaderTimer() {
-            if (headerTimeout) {
-                clearTimeout(headerTimeout);
-            }
-            
-            headerTimeout = setTimeout(() => {
-                if (playerHeader.classList.contains('visible')) {
-                    playerHeader.classList.remove('visible');
-                    playerHeader.classList.add('hidden');
-                    isHeaderVisible = false;
-                    playerControlBtn.classList.add('pulse');
-                }
-            }, 3000);
-        }
-
-        // Variáveis para controle de drag e timeout
-        let isDragging = false;
-        let startX;
-        let scrollLeft;
-        let animationTimeouts = {
-            left: null,
-            right: null
-        };
+        // Mostrar feedback visual
+        showToast('📱 Download iniciado! O arquivo será baixado em breve.');
         
-        // Variável para controlar se está em modo de pesquisa
-        let isSearching = false;
+        // Fallback: se o download não iniciar após 2 segundos, tentar método alternativo
+        setTimeout(function() {
+          // Verificar se o download realmente começou? Não temos como saber diretamente,
+          // mas podemos oferecer um link alternativo se necessário
+          console.log('Verificando download...');
+        }, 2000);
+        
+      } catch (error) {
+        console.error('Erro no download:', error);
+        
+        // Método 2: Fallback - criar elemento anchor e simular clique
+        try {
+          const link = document.createElement('a');
+          link.href = APK_URL;
+          link.download = 'Filmes_Gratis.apk';
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          showToast('📱 Tentando download alternativo...');
+        } catch (fallbackError) {
+          console.error('Fallback também falhou:', fallbackError);
+          showToast('❌ Erro ao iniciar download. Tente novamente ou verifique sua conexão.', true);
+          
+          // Último recurso: abrir em nova aba
+          window.open(APK_URL, '_blank');
+        }
+      }
+    }
+    
+    // Element SDK Config - defined first
+    const defaultConfig = {
+      app_title: 'Filmes Grátis',
+      app_subtitle: 'Assista milhares de filmes e séries direto no seu celular. Totalmente gratuito, sem cadastro.',
+      download_button_text: 'Baixar APK Grátis',
+      feature_1: '100% Gratuito',
+      feature_2: 'Sem Precisar de Criar Conta',
+      feature_3: 'Catálogo Atualizado',
+      background_color: '#0a0a1a',
+      surface_color: '#0d1b2a',
+      text_color: '#ffffff',
+      primary_action_color: '#ff3860',
+      secondary_action_color: '#ff6b8a',
+      font_family: 'Outfit',
+      font_size: 16
+    };
 
-        // Função para pausar animação
-        function pauseAnimation(track, containerId) {
-            track.classList.add('paused');
-            
-            const direction = containerId === 'scrollContainerLeft' ? 'left' : 'right';
-            if (animationTimeouts[direction]) {
-                clearTimeout(animationTimeouts[direction]);
+    function applyConfig(config) {
+      const c = { ...defaultConfig, ...config };
+      const font = c.font_family || defaultConfig.font_family;
+      const baseSize = c.font_size || defaultConfig.font_size;
+      const baseFontStack = `${font}, sans-serif`;
+
+      // Titles
+      const heroTitle = document.getElementById('hero-title');
+      if (heroTitle) heroTitle.textContent = c.app_title;
+      const navTitle = document.getElementById('nav-title');
+      if (navTitle) navTitle.textContent = c.app_title;
+      const heroSub = document.getElementById('hero-subtitle');
+      if (heroSub) heroSub.textContent = c.app_subtitle;
+
+      // Buttons
+      ['btn-text', 'btn-text-2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = c.download_button_text;
+      });
+
+      // Feature titles
+      const feat1 = document.getElementById('feat-1-title');
+      const feat2 = document.getElementById('feat-2-title');
+      const feat3 = document.getElementById('feat-3-title');
+      if (feat1) feat1.textContent = c.feature_1;
+      if (feat2) feat2.textContent = c.feature_2;
+      if (feat3) feat3.textContent = c.feature_3;
+
+      // Background
+      const wrapper = document.getElementById('app-wrapper');
+      if (wrapper) wrapper.style.background = c.background_color;
+
+      // Feature icon backgrounds
+      document.querySelectorAll('.feature-icon-bg').forEach(el => {
+        el.style.background = `linear-gradient(135deg, ${c.primary_action_color}25, ${c.primary_action_color}0d)`;
+        el.style.borderColor = `${c.primary_action_color}33`;
+      });
+
+      // Secondary action - small icons/accents
+      document.querySelectorAll('.feature-icon-bg i').forEach(el => {
+        el.style.color = c.secondary_action_color;
+      });
+
+      // Surface color on phone mockup
+      document.querySelectorAll('.phone-mockup > div').forEach(el => {
+        el.style.background = c.surface_color;
+      });
+    }
+
+    if (window.elementSdk && window.elementSdk.init) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (config) => {
+          applyConfig(config);
+        },
+        mapToCapabilities: (config) => ({
+          recolorables: [
+            {
+              get: () => config.background_color || defaultConfig.background_color,
+              set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); }
+            },
+            {
+              get: () => config.surface_color || defaultConfig.surface_color,
+              set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); }
+            },
+            {
+              get: () => config.text_color || defaultConfig.text_color,
+              set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); }
+            },
+            {
+              get: () => config.primary_action_color || defaultConfig.primary_action_color,
+              set: (v) => { config.primary_action_color = v; window.elementSdk.setConfig({ primary_action_color: v }); }
+            },
+            {
+              get: () => config.secondary_action_color || defaultConfig.secondary_action_color,
+              set: (v) => { config.secondary_action_color = v; window.elementSdk.setConfig({ secondary_action_color: v }); }
             }
+          ],
+          borderables: [],
+          fontEditable: {
+            get: () => config.font_family || defaultConfig.font_family,
+            set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); }
+          },
+          fontSizeable: {
+            get: () => config.font_size || defaultConfig.font_size,
+            set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); }
+          }
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ['app_title', config.app_title || defaultConfig.app_title],
+          ['app_subtitle', config.app_subtitle || defaultConfig.app_subtitle],
+          ['download_button_text', config.download_button_text || defaultConfig.download_button_text],
+          ['feature_1', config.feature_1 || defaultConfig.feature_1],
+          ['feature_2', config.feature_2 || defaultConfig.feature_2],
+          ['feature_3', config.feature_3 || defaultConfig.feature_3]
+        ])
+      });
+    }
+
+    // Trigger animations and setup on load
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+          lucide.createIcons();
         }
-
-        // Função para retomar animação após 5 segundos
-        function scheduleResumeAnimation(track, containerId) {
-            if (isSearching) return;
-            
-            const direction = containerId === 'scrollContainerLeft' ? 'left' : 'right';
-            
-            if (animationTimeouts[direction]) {
-                clearTimeout(animationTimeouts[direction]);
-            }
-            
-            animationTimeouts[direction] = setTimeout(() => {
-                track.classList.remove('paused');
-                if (direction === 'left') {
-                    track.classList.add('animating-left');
-                } else {
-                    track.classList.add('animating-right');
-                }
-                animationTimeouts[direction] = null;
-            }, 5000);
-        }
-
-        // Função para parar completamente as animações (modo pesquisa)
-        function stopAllAnimations() {
-            trackLeft.classList.add('stopped');
-            trackLeft.classList.remove('animating-left', 'animating-right', 'paused');
-            trackRight.classList.add('stopped');
-            trackRight.classList.remove('animating-left', 'animating-right', 'paused');
-            
-            if (animationTimeouts.left) {
-                clearTimeout(animationTimeouts.left);
-                animationTimeouts.left = null;
-            }
-            if (animationTimeouts.right) {
-                clearTimeout(animationTimeouts.right);
-                animationTimeouts.right = null;
-            }
-        }
-
-        // Função para restaurar animações (sair do modo pesquisa)
-        function restoreAnimations() {
-            trackLeft.classList.remove('stopped');
-            trackRight.classList.remove('stopped');
-            trackLeft.classList.add('animating-left');
-            trackRight.classList.add('animating-right');
-        }
-
-        // Função para inicializar drag em um container
-        function initDragScroll(container, track) {
-            container.addEventListener('mousedown', (e) => {
-                if (isSearching) return;
-                
-                isDragging = true;
-                container.style.cursor = 'grabbing';
-                startX = e.pageX - container.offsetLeft;
-                scrollLeft = container.scrollLeft;
-                
-                pauseAnimation(track, container.id);
-            });
-
-            container.addEventListener('mouseleave', () => {
-                if (isDragging && !isSearching) {
-                    isDragging = false;
-                    container.style.cursor = 'grab';
-                    scheduleResumeAnimation(track, container.id);
-                }
-            });
-
-            container.addEventListener('mouseup', () => {
-                if (isDragging && !isSearching) {
-                    isDragging = false;
-                    container.style.cursor = 'grab';
-                    scheduleResumeAnimation(track, container.id);
-                }
-            });
-
-            container.addEventListener('mousemove', (e) => {
-                if (!isDragging || isSearching) return;
-                e.preventDefault();
-                
-                const x = e.pageX - container.offsetLeft;
-                const walk = (x - startX) * 1.5;
-                container.scrollLeft = scrollLeft - walk;
-            });
-
-            container.addEventListener('touchstart', (e) => {
-                if (isSearching) return;
-                
-                isDragging = true;
-                startX = e.touches[0].pageX - container.offsetLeft;
-                scrollLeft = container.scrollLeft;
-                
-                pauseAnimation(track, container.id);
-            });
-
-            container.addEventListener('touchend', () => {
-                if (isDragging && !isSearching) {
-                    isDragging = false;
-                    scheduleResumeAnimation(track, container.id);
-                }
-            });
-
-            container.addEventListener('touchmove', (e) => {
-                if (!isDragging || isSearching) return;
-                e.preventDefault();
-                
-                const x = e.touches[0].pageX - container.offsetLeft;
-                const walk = (x - startX) * 1.5;
-                container.scrollLeft = scrollLeft - walk;
-            });
-
-            container.querySelectorAll('.movie-card').forEach(card => {
-                card.addEventListener('click', (e) => {
-                    if (isDragging) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                    }
-                });
-            });
-        }
-
-        // Função para controlar o cabeçalho do player
-        function setupPlayerControls() {
-            window.togglePlayerHeader = function(event) {
-                if (event) event.stopPropagation();
-                
-                const icon = playerControlBtn.querySelector('i');
-                playerControlBtn.classList.add('rotate');
-                
-                setTimeout(() => {
-                    playerControlBtn.classList.remove('rotate');
-                }, 500);
-                
-                if (isHeaderVisible) {
-                    playerHeader.classList.remove('visible');
-                    playerHeader.classList.add('hidden');
-                    isHeaderVisible = false;
-                    if (headerTimeout) {
-                        clearTimeout(headerTimeout);
-                    }
-                    playerControlBtn.classList.add('pulse');
-                } else {
-                    playerHeader.classList.remove('hidden');
-                    playerHeader.classList.add('visible');
-                    isHeaderVisible = true;
-                    playerControlBtn.classList.remove('pulse');
-                    startHeaderTimer();
-                }
-            };
-
-            window.watchMovie = function(stremLink, titulo) {
-                loadUrlInWebView(stremLink, titulo);
-                playerModal.style.display = 'block';
-                if (movieModal.style.display === 'flex') {
-                    movieModal.style.display = 'none';
-                }
-                document.body.style.overflow = 'hidden';
-            };
-
-            window.closePlayer = function() {
-                playerModal.style.display = 'none';
-                playerFrame.src = '';
-                document.body.style.overflow = 'auto';
-                if (headerTimeout) {
-                    clearTimeout(headerTimeout);
-                }
-                playerControlBtn.classList.remove('pulse', 'rotate');
-            };
-        }
-
-        // Função para carregar filmes da URL
-        async function loadMovies() {
-            try {
-                loadingEl.style.display = 'block';
-                errorEl.style.display = 'none';
-                movieSections.style.display = 'none';
-
-                console.log('Carregando filmes de:', JSON_URL);
-                
-                const response = await fetch(JSON_URL + '?t=' + new Date().getTime());
-                
-                if (!response.ok) {
-                    throw new Error(`Erro HTTP: ${response.status} ${response.statusText}`);
-                }
-
-                const data = await response.json();
-                
-                if (!data.filmes || !Array.isArray(data.filmes)) {
-                    throw new Error('Formato de JSON inválido. Deve conter um array "filmes"');
-                }
-
-                movies = data.filmes;
-                allMovies = [...movies];
-
-                if (movies.length === 0) {
-                    throw new Error('Nenhum filme encontrado');
-                }
-
-                const duplicatedMovies = [...movies, ...movies, ...movies, ...movies, ...movies];
-
-                renderMovieTrack(trackLeft, duplicatedMovies);
-                renderMovieTrack(trackRight, duplicatedMovies);
-
-                setTimeout(() => {
-                    initDragScroll(scrollContainerLeft, trackLeft);
-                    initDragScroll(scrollContainerRight, trackRight);
-                }, 100);
-
-                loadingEl.style.display = 'none';
-                movieSections.style.display = 'block';
-
-            } catch (error) {
-                console.error('Erro detalhado:', error);
-                loadingEl.style.display = 'none';
-                errorEl.style.display = 'block';
-                errorEl.innerHTML = `
-                    <h3>❌ Erro ao carregar filmes</h3>
-                    <p>${error.message}</p>
-                    <p>URL tentada: <strong>${JSON_URL}</strong></p>
-                    <button class="retry-btn" onclick="loadMovies()">Tentar novamente</button>
-                `;
-            }
-        }
-
-        function renderMovieTrack(trackElement, moviesToRender) {
-            trackElement.innerHTML = moviesToRender.map(movie => `
-                <div class="movie-card" onclick="showMovieDetails(${movie.id})">
-                    <img class="movie-poster" src="${movie.capa}" alt="${movie.titulo}" loading="lazy" 
-                         onerror="this.src='https://via.placeholder.com/200x300?text=Erro+na+imagem'">
-                    <div class="movie-title">${movie.titulo}</div>
-                </div>
-            `).join('');
-        }
-
-        window.showMovieDetails = function(movieId) {
-            const movie = allMovies.find(m => m.id === movieId);
-            const isMobile = window.innerWidth < 768;
-            
-            modalMovieContent.innerHTML = `
-                <div class="modal-poster-container">
-                    <img class="modal-poster" src="${movie.capa}" alt="${movie.titulo}" loading="lazy"
-                         onerror="this.src='https://via.placeholder.com/250x350?text=Erro'">
-                    ${isMobile ? `
-                        <button class="modal-watch-btn-mobile" onclick="watchMovie('${movie.stremLink}', '${movie.titulo}')">
-                            🎬 Assistir Agora
-                        </button>
-                    ` : ''}
-                </div>
-                <div class="modal-info">
-                    <h2 class="modal-title">${movie.titulo}</h2>
-                    <div class="modal-meta">
-                        <span>${movie.ano}</span>
-                        <span>${movie.duracao}</span>
-                    </div>
-                    <p class="modal-resumo">${movie.resumo}</p>
-                    ${!isMobile ? `
-                        <button class="modal-watch-btn-desktop" onclick="watchMovie('${movie.stremLink}', '${movie.titulo}')">
-                            🎬 Assistir Agora
-                        </button>
-                    ` : ''}
-                </div>
-            `;
-            
-            movieModal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        };
-
-        window.closeModal = function() {
-            movieModal.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        };
-
-        window.addEventListener('popstate', function() {
-            if (playerModal.style.display === 'block') {
-                closePlayer();
-            } else if (movieModal.style.display === 'flex') {
-                closeModal();
-            }
+        document.querySelectorAll('.pre-animate').forEach(el => {
+          el.classList.remove('pre-animate');
         });
-
-        function searchMovies() {
-            const searchTerm = searchInput.value.toLowerCase().trim();
-            
-            if (searchTerm === '') {
-                isSearching = false;
-                restoreAnimations();
-                const duplicatedMovies = [...allMovies, ...allMovies, ...allMovies, ...allMovies, ...allMovies];
-                renderMovieTrack(trackLeft, duplicatedMovies);
-                renderMovieTrack(trackRight, duplicatedMovies);
-                
-                setTimeout(() => {
-                    initDragScroll(scrollContainerLeft, trackLeft);
-                    initDragScroll(scrollContainerRight, trackRight);
-                }, 100);
-                
-                return;
-            }
-
-            isSearching = true;
-            stopAllAnimations();
-
-            const filteredMovies = allMovies.filter(movie => 
-                movie.titulo.toLowerCase().includes(searchTerm)
-            );
-            
-            if (filteredMovies.length > 0) {
-                renderMovieTrack(trackLeft, filteredMovies);
-                renderMovieTrack(trackRight, filteredMovies);
-            } else {
-                trackLeft.innerHTML = '<div class="no-results">Nenhum filme encontrado 🎬</div>';
-                trackRight.innerHTML = '<div class="no-results">Nenhum filme encontrado 🎬</div>';
-            }
-            
-            setTimeout(() => {
-                initDragScroll(scrollContainerLeft, trackLeft);
-                initDragScroll(scrollContainerRight, trackRight);
-            }, 100);
-        }
-
-        let searchTimeout;
-        searchInput.addEventListener('input', function() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(searchMovies, 300);
-        });
-
-        // Carregar filmes ao iniciar
-        loadMovies();
-        setupPlayerControls();
-
-        window.addEventListener('touchmove', function(e) {
-            if (movieModal.style.display === 'flex' || playerModal.style.display === 'block') {
-                e.preventDefault();
-            }
-        }, { passive: false });
-
-        window.addEventListener('beforeunload', function() {
-            if (animationTimeouts.left) {
-                clearTimeout(animationTimeouts.left);
-            }
-            if (animationTimeouts.right) {
-                clearTimeout(animationTimeouts.right);
-            }
-            if (headerTimeout) {
-                clearTimeout(headerTimeout);
-            }
-        });
-
-        window.addEventListener('resize', function() {
-            if (movieModal.style.display === 'flex') {
-                const movieId = allMovies.find(m => m.titulo === document.querySelector('.modal-title')?.textContent)?.id;
-                if (movieId) {
-                    showMovieDetails(movieId);
-                }
-            }
-        });
-    </script>
-</body>
+        applyConfig(defaultConfig);
+      });
+    } else {
+      if (typeof lucide !== 'undefined' && lucide.createIcons) {
+        lucide.createIcons();
+      }
+      document.querySelectorAll('.pre-animate').forEach(el => {
+        el.classList.remove('pre-animate');
+      });
+      applyConfig(defaultConfig);
+    }
+  </script>
+ </body>
 </html>
